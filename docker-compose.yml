@@ -1,0 +1,61 @@
+version: "3"
+services:
+  kafka:
+    container_name: kafka
+    image: bitnami/kafka:3.4.1
+    volumes:
+      - ./kafka:/home/kafka
+    ports:
+      - '9092:9092'
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions.sh --bootstrap-server=localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 30s
+      retries: 50
+      start_period: 30s
+    restart: always
+    networks:
+      - my_network
+
+  python:
+    container_name: python
+    build:
+      context: .
+      dockerfile: ./python/Dockerfile
+    volumes:
+      - ./python:/home/python
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests;"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - my_network
+
+  mongodb:
+    container_name: mongodb
+    image: mongo:7.0.9
+    ports:
+      - '27018:27017'
+    volumes:
+      - ./mongodb:/data/db
+    restart: always
+    healthcheck:
+      test: ["CMD", "mongo","--eval", "db.stats()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - my_network
+
+networks:
+  my_network:
