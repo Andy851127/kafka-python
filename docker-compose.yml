@@ -56,6 +56,20 @@ services:
       start_period: 30s
     networks:
       - my_network
+  pyspark-notebook:
+    container_name: pyspark-notebook
+    image: jupyter/pyspark-notebook
+    ports:
+      - '8888:8888'
+    volumes:
+      - ./pyspark-notebook:/home/jovyan/work
+    restart: always
+    environment:
+      - JUPYTER_TOKEN=123456
+      - JUPYTER_PORT=8888
+      - JUPYTER_NOTEBOOK_DIR=/home/jovyan/work
+    networks:
+      - my_network
 
 networks:
   my_network:
