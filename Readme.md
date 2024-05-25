@@ -23,3 +23,5 @@ python kafka_comsumer.py
 
 # 執行 jupyter 使用 pyspark + pymongo + matplotlib + seaborn 做分析圖
 點擊 /work/Statistical analysis chart.ipynb 運行 all cells
+
+# MongoDB IP 請根據自有 IP 調整
