@@ -1,7 +1,7 @@
 from kafka import KafkaConsumer
 from pymongo import MongoClient
 import json
-
+import re
 
 username = "root"  # 替换为你的MongoDB用户名
 password = "root"  # 替换为你的MongoDB密码
@@ -38,13 +38,32 @@ consumer = KafkaConsumer(
 
 # 消费消息
 for message in consumer:
-    result = message.value
-    print(result)
-    # print('message:',message)
-    # print(f"Received message: {message.value}")
-    # message_dict = json.loads(message)
-    # print(dict(message))
-    # collection.insert_one(dict(message))
+    try:
+        result = message.value
+        clean_result = '\n'.join(result.split('\\n'))
+        clean_result = clean_result.replace('\\', '')
+        
+        # 修正 JSON 字符串，移除多餘的換行符和空格
+        json_string = result.replace('\n', '').replace('  ', '')
 
+        # 去掉字串最外層的引號
+        clean_result = clean_result.strip('"')
+        # 找到 "parsedcomment" 字符串的索引位置
+        index_parsedcomment = clean_result.find('"parsedcomment"')
+
+        # 截取字符串，保留 "parsedcomment" 之前的內容
+        json_str = clean_result[:index_parsedcomment - 1]
+        # # 添加末尾的 }
+        json_str += "}"
+        # # 使用切片操作去除最後一個逗號
+        json_str_cleaned = json_str.rsplit(',', 1)[0] + json_str.rsplit(',', 1)[1].strip()
+        print(json_str_cleaned)
+        print(type(json_str_cleaned))
+
+        message_dict = json.loads(json_str_cleaned)
+
+        collection.insert_one(dict(message_dict))
+    except:
+        continue
 # 关闭消费者连接
 consumer.close()
